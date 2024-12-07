@@ -1,5 +1,5 @@
 {
-  "name": "hospital-management-system",
+  "name": "hospital-management-system-server",
   "version": "1.0.0",
   "description": "A backend server for the Hospital Management system, providing APIs for managing patients, doctors, appointments, and hospital operations efficiently.",
   "main": "index.js",
