@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
-import bcrypt from "bcryptjs";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 
 const userSchema = new mongoose.Schema(
   {
@@ -22,6 +23,11 @@ const userSchema = new mongoose.Schema(
     refreshToken: {
       type: String,
     },
+    role: {
+      type: String,
+      enum: ["patient", "admin", "super-admin"],
+      default: "patient",
+    },
   },
   {
     timestamps: true,
@@ -32,18 +38,46 @@ const userSchema = new mongoose.Schema(
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
 
-  try {
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-    next();
-  } catch (error) {
-    next(error);
-  }
+  this.password = await bcrypt.hash(this.password, 10);
+  next();
 });
 
-// Method to compare the entered password with the stored hashed password
-userSchema.methods.comparePassword = async function (enteredPassword) {
-  return await bcrypt.compare(enteredPassword, this.password);
+userSchema.methods.isPasswordCorrect = async function (password) {
+  return await bcrypt.compare(password, this.password);
+};
+
+// generate access token
+userSchema.methods.generateAccessToken = function () {
+  try {
+    return jwt.sign(
+      {
+        _id: this._id,
+        role: this.role,
+      },
+      process.env.ACCESS_TOKEN_SECRET,
+      { expiresIn: process.env.ACCESS_TOKEN_EXPIRY }
+    );
+  } catch (error) {
+    console.error("Error generating access token:", error);
+    throw new Error("Failed to generate access token");
+  }
+};
+
+//generate refresh token
+userSchema.methods.generateRefreshToken = function () {
+  try {
+    return jwt.sign(
+      {
+        _id: this._id,
+        role: this.role,
+      },
+      process.env.REFRESH_TOKEN_SECRET,
+      { expiresIn: process.env.REFRESH_TOKEN_EXPIRY }
+    );
+  } catch (error) {
+    console.error("Error generating refresh token:", error);
+    throw new Error("Failed to generate refresh token");
+  }
 };
 
 export const User = mongoose.model("User", userSchema);

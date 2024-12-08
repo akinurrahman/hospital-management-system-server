@@ -1,6 +1,24 @@
 import jwt from "jsonwebtoken";
 import { User } from "../../models/user.models.js";
 
+const generateAccessAndRefreshToken = async (userId) => {
+  try {
+    const user = await User.findById(userId);
+    const accessToken = user.generateAccessToken();
+    const refreshToken = user.generateRefreshToken();
+
+    user.refreshToken = refreshToken;
+    await user.save();
+
+    return { accessToken, refreshToken };
+  } catch (error) {
+    res.status(500).json({
+      message:
+        "Something went wrong while generating referesh and access token",
+    });
+  }
+};
+
 export const registerUser = async (req, res) => {
   const { fullName, email, password } = req.body;
 
@@ -13,36 +31,24 @@ export const registerUser = async (req, res) => {
 
     // create new user and save to db
     const newUser = new User({ fullName, email, password });
-
-    // Generate an access token and refresh token
-    const accessToken = jwt.sign(
-      { userId: newUser._id, role: "user" },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.ACCESS_TOKEN_EXPIRY }
-    );
-
-    const refreshToken = jwt.sign(
-      { userId: newUser._id, role: "user" },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.REFRESH_TOKEN_EXPIRY }
-    );
-
-    newUser.refreshToken = refreshToken;
     await newUser.save();
 
-    // Send response with user details and tokens
+    const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
+      newUser._id
+    );
+
+    // Respond with the newly created user and tokens
     res.status(201).json({
-      status: "success",
       message: "User registered successfully",
-      data: {
-        user: {
-          fullName: newUser.fullName,
-          email: newUser.email,
-        },
-        tokens: {
-          accessToken,
-          refreshToken,
-        },
+      user: {
+        id: newUser._id,
+        fullName: newUser.fullName,
+        email: newUser.email,
+        role: newUser.role,
+      },
+      tokens: {
+        accessToken,
+        refreshToken,
       },
     });
   } catch (error) {
@@ -50,5 +56,39 @@ export const registerUser = async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
-export const loginUser = (req, res) => {};
-export const refreshToken = (req, res) => {};
+
+export const loginUser = async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "Invalid Credentials" });
+    }
+
+    const isPasswordCorrect = await user.isPasswordCorrect(password);
+    if (!isPasswordCorrect) {
+      return res.status(401).json({ message: "Invalid Credentials" });
+    }
+
+    const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
+      user._id
+    );
+
+    res.status(200).json({
+      message: "Login successful",
+      user: {
+        id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        role: user.role,
+      },
+      tokens: {
+        accessToken,
+        refreshToken,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
