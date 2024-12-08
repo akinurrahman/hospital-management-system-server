@@ -15,8 +15,10 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-app.get("/", (req, res) => {
-  res.send("Hello World!");
-});
+// route imports
+import AuthRouter from "./routes/auth.routes.js";
+
+// routes diclaration
+app.use("/api/v1/auth", AuthRouter);
 
 export default app;
