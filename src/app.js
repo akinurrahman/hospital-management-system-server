@@ -17,8 +17,10 @@ app.use(cookieParser());
 
 // route imports
 import AuthRouter from "./routes/auth.routes.js";
+import FileUploadRouter from "./routes/fileUpload.routes.js";
 
 // routes diclaration
 app.use("/api/v1/auth", AuthRouter);
+app.use("/api/v1/file-upload", FileUploadRouter);
 
 export default app;
