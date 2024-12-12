@@ -11,10 +11,7 @@ const generateAccessAndRefreshToken = async (userId) => {
 
     return { accessToken, refreshToken };
   } catch (error) {
-    res.status(500).json({
-      message:
-        "Something went wrong while generating referesh and access token",
-    });
+    throw new Error("Error generating tokens");
   }
 };
 
@@ -86,6 +83,32 @@ export const loginUser = async (req, res) => {
         accessToken,
         refreshToken,
       },
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+export const refreshAccessToken = async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+    if (!refreshToken)
+      return res.status(400).json({ message: "refresh token not found" });
+
+    const user = await User.findOne({ refreshToken });
+    if (!user) {
+      return res.status(403).json({ message: "Invalid Refresh Token" });
+    }
+
+    const accessToken = user.generateAccessToken();
+    const newRefreshToken = user.generateRefreshToken();
+
+    user.refreshToken = newRefreshToken;
+    await user.save();
+
+    return res.status(200).json({
+      accessToken,
+      refreshToken: newRefreshToken,
     });
   } catch (error) {
     res.status(500).json({ message: "Internal Server Error" });
