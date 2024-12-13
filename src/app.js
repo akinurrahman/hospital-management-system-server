@@ -19,10 +19,12 @@ app.use(cookieParser());
 import AuthRouter from "./routes/auth.routes.js";
 import FileUploadRouter from "./routes/fileUpload.routes.js";
 import AdminRouter from "./routes/admin.routes.js";
+import DoctorRouter from "./routes/doctor.routes.js";
 
 // routes diclaration
 app.use("/api/v1/auth", AuthRouter);
 app.use("/api/v1/file-upload", FileUploadRouter);
 app.use("/api/v1", AdminRouter);
+app.use("/api/v1/doctor", DoctorRouter);
 
 export default app;
