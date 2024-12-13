@@ -15,6 +15,7 @@ const generateAccessAndRefreshToken = async (userId) => {
   }
 };
 
+// register patient
 export const registerUser = async (req, res) => {
   const { fullName, email, password } = req.body;
 

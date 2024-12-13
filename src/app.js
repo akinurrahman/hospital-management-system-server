@@ -20,11 +20,13 @@ import AuthRouter from "./routes/auth.routes.js";
 import FileUploadRouter from "./routes/fileUpload.routes.js";
 import AdminRouter from "./routes/admin.routes.js";
 import DoctorRouter from "./routes/doctor.routes.js";
+import PatientRouter from "./routes/patient.routes.js";
 
 // routes diclaration
 app.use("/api/v1/auth", AuthRouter);
 app.use("/api/v1/file-upload", FileUploadRouter);
 app.use("/api/v1", AdminRouter);
-app.use("/api/v1/doctor", DoctorRouter);
+app.use("/api/v1", DoctorRouter);
+app.use("/api/v1", PatientRouter);
 
 export default app;

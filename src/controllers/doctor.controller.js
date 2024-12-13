@@ -1,5 +1,6 @@
 import { Doctor } from "../models/doctor.models.js";
 import { User } from "../models/user.models.js";
+import { Appointment } from "../models/appointment.models.js";
 
 export const updateDoctorProfile = async (req, res) => {
   try {
@@ -55,73 +56,64 @@ export const updateDoctorProfile = async (req, res) => {
   }
 };
 
-export const getSpecializations = async (req, res) => {
+export const updateAppointmentStatus = async (req, res) => {
   try {
-    // Fetch all doctors and extract unique specializations
-    const doctors = await Doctor.find();
-    const specializations = [
-      ...new Set(doctors.map((doctor) => doctor.specialization)),
-    ];
+    const { appointmentId, status } = req.body;
 
-    if (!specializations.length) {
-      return res.status(404).json({ message: "No specializations found" });
+    // Validate input
+    if (!appointmentId || !["Accepted", "Rejected"].includes(status)) {
+      return res.status(400).json({ message: "Invalid input" });
     }
 
+    // Fetch the appointment
+    const appointment = await Appointment.findById(appointmentId);
+    if (!appointment) {
+      return res.status(404).json({ message: "Appointment not found" });
+    }
+
+    // Update the appointment status
+    appointment.status = status;
+    await appointment.save();
+
     res.status(200).json({
-      message: "Available specializations",
-      specializations,
+      message: `Appointment ${status} successfully`,
+      appointment,
     });
   } catch (error) {
-    console.error("Error fetching specializations:", error);
+    console.error("Error updating appointment status:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
 
-// API to get available doctors based on filters (date and specialization)
-export const getAvailableDoctors = async (req, res) => {
+export const getAppointmentsForDoctor = async (req, res) => {
   try {
-    const { date, specialization } = req.query; // Get date and specialization from query params
+    // Step 1: Get the doctor from the User ID
+    const userId = req.user._id; // Assuming the middleware attaches the user info
+    const doctor = await Doctor.findOne({ user: userId });
 
-    // Convert the date to the day of the week (e.g., "Monday", "Tuesday")
-    const daysOfWeek = [
-      "Sunday",
-      "Monday",
-      "Tuesday",
-      "Wednesday",
-      "Thursday",
-      "Friday",
-      "Saturday",
-    ];
-    let query = {};
-
-    if (date) {
-      const givenDate = new Date(date);
-      const dayOfWeek = daysOfWeek[givenDate.getDay()];
-      query.availableDays = { $in: [dayOfWeek] }; // Filter by available day
-    }
-
-    if (specialization) {
-      query.specialization = { $regex: new RegExp(`^${specialization}$`, "i") }; // Case-insensitive filter for specialization
-    }
-
-    // Fetch doctors based on the constructed query
-    const availableDoctors = await Doctor.find(query).populate(
-      "user",
-      "fullName email contactNumber"
-    );
-
-    if (!availableDoctors.length) {
+    if (!doctor) {
       return res
         .status(404)
-        .json({ message: "No doctors available for the selected filters" });
+        .json({ message: "Doctor not found for this user" });
+    }
+
+    // Step 2: Find appointments for this doctor
+    const appointments = await Appointment.find({ doctor: doctor._id })
+      .populate("patient", "fullName email contactNumber") // Populating patient details
+      .populate("doctor", "specialization avatar contactNumber"); // Populating doctor details
+
+    if (!appointments.length) {
+      return res
+        .status(404)
+        .json({ message: "No appointments found for this doctor" });
     }
 
     res.status(200).json({
-      message: "Available doctors for the selected filters",
-      doctors: availableDoctors,
+      message: "Appointments retrieved successfully",
+      appointments,
     });
   } catch (error) {
-    console.error("Error fetching available doctors:", error);
+    console.error("Error fetching appointments for doctor:", error);
     res.status(500).json({ message: "Server error" });
   }
 };

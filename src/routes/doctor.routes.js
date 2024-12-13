@@ -1,20 +1,17 @@
 import { Router } from "express";
 import {
-  getAvailableDoctors,
-  getSpecializations,
+  getAppointmentsForDoctor,
+  updateAppointmentStatus,
   updateDoctorProfile,
 } from "../controllers/doctor.controller.js";
-import {
-  verifyDoctor,
-  verifyPatient,
-} from "../middlewares/verify.middleware.js";
+import { verifyDoctor } from "../middlewares/verify.middleware.js";
 
 const router = Router();
 
-router.route("/").patch(verifyDoctor, updateDoctorProfile);
+router.route("/update-profile").patch(verifyDoctor, updateDoctorProfile);
+router.route("/appointments").get(verifyDoctor, getAppointmentsForDoctor);
 router
-  .route("/available-specializations")
-  .get(verifyPatient, getSpecializations);
-router.route("/available-doctors").get(verifyPatient, getAvailableDoctors);
+  .route("/appointments/status")
+  .patch(verifyDoctor, updateAppointmentStatus);
 
 export default router;
