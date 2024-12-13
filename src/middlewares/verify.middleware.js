@@ -37,8 +37,6 @@ export const verifyRole = (role) => {
   };
 };
 
-// Usage for verifying admin
+export const verifyPatient = verifyRole("patient");
 export const verifyAdmin = verifyRole("admin");
-
-// Usage for verifying doctor
 export const verifyDoctor = verifyRole("doctor");
