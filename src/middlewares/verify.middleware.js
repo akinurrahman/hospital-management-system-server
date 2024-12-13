@@ -5,7 +5,7 @@ import { User } from "../models/user.models.js";
 const verifyAdmin = async (req, res, next) => {
   try {
     // Get the token from the cookie
-    const token = req.cookies.Authorization?.split(" ")[1]; // "Authorization" cookie with "Bearer <token>"
+    const token = req.headers.authorization.split(" ")[1]; // "Authorization" cookie with "Bearer <token>"
 
     if (!token) {
       return res

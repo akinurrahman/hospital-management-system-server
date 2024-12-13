@@ -18,15 +18,11 @@ app.use(cookieParser());
 // route imports
 import AuthRouter from "./routes/auth.routes.js";
 import FileUploadRouter from "./routes/fileUpload.routes.js";
-import AdminRouter from './routes/admin.routes.js'
+import AdminRouter from "./routes/admin.routes.js";
 
 // routes diclaration
 app.use("/api/v1/auth", AuthRouter);
 app.use("/api/v1/file-upload", FileUploadRouter);
-app.use("/app/v1",AdminRouter)
-
-app.get("/api/v1", (req, res) =>
-  res.status(201).json({ message: "Test response" })
-);
+app.use("/api/v1", AdminRouter);
 
 export default app;
