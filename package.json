@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon -r dotenv/config --experimental-json-modules src/index.js",
-    "format": "prettier --write src"
+    "start": "node -r dotenv/config --experimental-json-modules src/index.js"
   },
   "author": "Akinur Rahman",
   "license": "ISC",
